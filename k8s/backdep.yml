@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: chatapp
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: tnxq1209/chat-app-backend:latest
+        env:        
+        - name: NODE_ENV
+          value: "production"
+        - name: MONGODB_URI
+          value: "mongodb://root:admin@mongodb:27017/chatApp?authSource=admin&retryWrites=true&w=majority"
+        - name: PORT
+          value: "5001"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: secret
+              key: JWT_SECRET
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+        ports:
+        - containerPort: 5001
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 15
+          periodSeconds: 20
